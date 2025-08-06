@@ -37,7 +37,10 @@ def handle_message():
 @chatbot_bp.route('/teams', methods=['POST'])
 def teams_webhook():
     """Endpoint for Microsoft Teams outgoing webhook to post replies."""
-    data = request.json or {}
+
+    # Teams may send JSON or form-encoded data depending on configuration. Try both.
+    data = request.get_json(silent=True) or request.form.to_dict() or {}
+
     text = data.get('text', '').strip()
     if text:
         MESSAGES.append({'sender': 'Developer', 'text': text})
