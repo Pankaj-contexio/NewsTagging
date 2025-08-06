@@ -45,6 +45,7 @@ app.register_blueprint(projects_bp, url_prefix='/api/projects')
 app.register_blueprint(pdf_bp, url_prefix='/')
 app.register_blueprint(reports_bp, url_prefix='/')
 app.register_blueprint(analytics_bp, url_prefix='/')
+app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
 
 # CORS(app, origins=["http://qa.platformxplus.com:5000"])
 
