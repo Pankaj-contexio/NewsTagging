@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Chatbot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h2>Support Chat</h2>
+<div id="messages" style="border:1px solid #ccc;height:300px;overflow-y:scroll;padding:5px;margin-bottom:10px;"></div>
+<input type="text" id="message" placeholder="Type your question" style="width:80%;"/>
+<button id="send">Send</button>
+
+<script>
+function loadMessages(){
+    $.getJSON('/chatbot/messages', function(data){
+        var msgs = $('#messages');
+        msgs.empty();
+        data.forEach(function(m){
+            msgs.append('<div><strong>'+m.sender+':</strong> '+m.text+'</div>');
+        });
+        msgs.scrollTop(msgs[0].scrollHeight);
+    });
+}
+$('#send').on('click', function(){
+    var text = $('#message').val();
+    $.ajax({
+        url:'/chatbot/message',
+        method:'POST',
+        contentType:'application/json',
+        data: JSON.stringify({text:text}),
+        success:function(){
+            $('#message').val('');
+            loadMessages();
+        }
+    });
+});
+setInterval(loadMessages,3000);
+loadMessages();
+</script>
+</body>
+</html>
