@@ -11,7 +11,7 @@ from routes.pdf_routes import pdf_bp
 from routes.manage_reports_routes import reports_bp
 from routes.document_routes import document_bp
 from routes.analytics_routes import analytics_bp
-from routes.chatbot_routes import chatbot_bp
+from routes.chatbot_routes import chatbot_bp, socketio
 import secrets
 from xhtml2pdf import pisa
 from pdf2docx import Converter
@@ -46,6 +46,7 @@ app.register_blueprint(pdf_bp, url_prefix='/')
 app.register_blueprint(reports_bp, url_prefix='/')
 app.register_blueprint(analytics_bp, url_prefix='/')
 app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
+socketio.init_app(app)
 
 # CORS(app, origins=["http://qa.platformxplus.com:5000"])
 
@@ -2977,4 +2978,4 @@ def internal_server_error(e):
 if __name__ == '__main__':
     # from waitress import serve  # Recommended for Windows
     # serve(app, host="0.0.0.0", port=5000, threads=16)
-    app.run(debug=True)
+    socketio.run(app, debug=True)
