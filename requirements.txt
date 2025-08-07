@@ -1,6 +1,5 @@
 pandas
 flask
-django
 requests
 pymongo
 pytz
@@ -9,5 +8,5 @@ boto3
 xhtml2pdf
 pyaudio
 waitress
-dotenv
+python-dotenv
 flask-socketio
