@@ -9,4 +9,3 @@ xhtml2pdf
 pyaudio
 waitress
 python-dotenv
-flask-socketio

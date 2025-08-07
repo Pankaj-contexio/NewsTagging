@@ -1,64 +1,92 @@
 import os
+import time
 import requests
-from flask import Blueprint, request, jsonify, render_template
-from flask_socketio import SocketIO, emit
+from flask import Blueprint, jsonify, render_template, request
 
 chatbot_bp = Blueprint('chatbot', __name__)
 
-# Socket.IO instance will be initialized with the Flask app in main.py
-socketio = SocketIO()
-
-# In-memory store for messages. In production, use persistent storage.
+# simple in-memory store for messages
 MESSAGES = []
+
+
+def post_to_teams(text, user="User"):
+    """Send a message to Teams via an incoming webhook."""
+    url = os.getenv('TEAMS_WEBHOOK_URL')
+    if not url:
+        return False
+    payload = {"text": f"{user}: {text}"}
+    try:
+        requests.post(url, json=payload, timeout=5)
+        return True
+    except Exception:
+        return False
+
+
+def get_graph_token():
+    """Obtain an access token for Microsoft Graph using client credentials."""
+    tenant = os.getenv('GRAPH_TENANT_ID')
+    client_id = os.getenv('GRAPH_CLIENT_ID')
+    client_secret = os.getenv('GRAPH_CLIENT_SECRET')
+    if not all([tenant, client_id, client_secret]):
+        return None
+    data = {
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'grant_type': 'client_credentials',
+        'scope': 'https://graph.microsoft.com/.default'
+    }
+    token_url = f'https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token'
+    try:
+        resp = requests.post(token_url, data=data, timeout=5)
+        resp.raise_for_status()
+        return resp.json().get('access_token')
+    except Exception:
+        return None
+
+
+def fetch_channel_messages():
+    """Fetch messages from a Teams channel via Microsoft Graph."""
+    team_id = os.getenv('TEAM_ID')
+    channel_id = os.getenv('CHANNEL_ID')
+    token = get_graph_token()
+    if not all([team_id, channel_id, token]):
+        return []
+    url = f'https://graph.microsoft.com/v1.0/teams/{team_id}/channels/{channel_id}/messages'
+    headers = {'Authorization': f'Bearer {token}'}
+    try:
+        resp = requests.get(url, headers=headers, timeout=5)
+        resp.raise_for_status()
+        data = resp.json().get('value', [])
+        messages = []
+        for item in data:
+            sender = item.get('from', {}).get('user', {}).get('displayName', 'Teams')
+            text = item.get('body', {}).get('content', '')
+            messages.append({'sender': sender, 'text': text})
+        return messages
+    except Exception:
+        return []
+
 
 @chatbot_bp.route('/', methods=['GET'])
 def chatbot_home():
-    """Render simple chatbot page."""
+    """Render the chatbot popup page."""
     return render_template('chatbot.html')
 
-@socketio.on('send_message')
-def handle_socket_message(data):
-    """Receive a message via Socket.IO and forward to Microsoft Teams."""
-    data = data or {}
+
+@chatbot_bp.route('/send', methods=['POST'])
+def send_message():
+    data = request.get_json(silent=True) or {}
     text = (data.get('text') or '').strip()
     user = data.get('user', 'User')
     if not text:
-        return
-
+        return jsonify({'success': False, 'error': 'Empty message'}), 400
     MESSAGES.append({'sender': user, 'text': text})
-
-    webhook_url = os.getenv('TEAMS_WEBHOOK_URL')
-    if webhook_url:
-        payload = {'text': f"{user}: {text}"}
-        try:
-            requests.post(webhook_url, json=payload, timeout=5)
-        except Exception:
-            pass
-
-    emit('new_message', {'sender': user, 'text': text}, broadcast=True)
-
-@chatbot_bp.route('/teams', methods=['POST'])
-def teams_webhook():
-    """Endpoint for Microsoft Teams outgoing webhook to post replies."""
-
-    # Teams may send JSON or form-encoded data depending on configuration. Try both.
-    data = request.get_json(silent=True) or request.form.to_dict() or {}
-
-    text = data.get('text', '').strip()
-    if text:
-        msg = {'sender': 'Developer', 'text': text}
-        MESSAGES.append(msg)
-        socketio.emit('new_message', msg, broadcast=True)
-    # Teams expects a JSON response describing the message that will appear in the channel
-    return jsonify({'type': 'message', 'text': 'Message received'})
-
-@chatbot_bp.route('/messages', methods=['GET'])
-def get_messages():
-    """Return all chat messages."""
-    return jsonify(MESSAGES)
+    post_to_teams(text, user)
+    return jsonify({'success': True})
 
 
-@socketio.on('connect')
-def handle_connect():
-    """Send existing messages to newly connected clients."""
-    emit('init_messages', MESSAGES)
+@chatbot_bp.route('/poll', methods=['GET'])
+def poll_messages():
+    """Return messages from Teams."""
+    messages = fetch_channel_messages()
+    return jsonify(messages)
