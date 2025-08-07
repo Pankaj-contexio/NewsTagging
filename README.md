@@ -2,9 +2,9 @@
 
 ## Chatbot with Microsoft Teams
 
-This project now includes a simple chatbot interface that forwards user
-messages to a Microsoft Teams channel. Developers can reply from Teams and
-their responses will appear in the chatbot UI.
+This project now includes a real-time chatbot interface powered by Socket.IO
+that forwards user messages to a Microsoft Teams channel. Developers can reply
+from Teams and their responses will instantly appear in the chatbot UI.
 
 ### Configuration
 

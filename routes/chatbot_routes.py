@@ -1,8 +1,12 @@
 import os
 import requests
 from flask import Blueprint, request, jsonify, render_template
+from flask_socketio import SocketIO, emit
 
 chatbot_bp = Blueprint('chatbot', __name__)
+
+# Socket.IO instance will be initialized with the Flask app in main.py
+socketio = SocketIO()
 
 # In-memory store for messages. In production, use persistent storage.
 MESSAGES = []
@@ -12,14 +16,14 @@ def chatbot_home():
     """Render simple chatbot page."""
     return render_template('chatbot.html')
 
-@chatbot_bp.route('/message', methods=['POST'])
-def handle_message():
-    """Receive a message from the user and forward to Microsoft Teams."""
-    data = request.get_json() or {}
-    text = data.get('text', '').strip()
+@socketio.on('send_message')
+def handle_socket_message(data):
+    """Receive a message via Socket.IO and forward to Microsoft Teams."""
+    data = data or {}
+    text = (data.get('text') or '').strip()
     user = data.get('user', 'User')
     if not text:
-        return jsonify({'success': False, 'message': 'Message text required'}), 400
+        return
 
     MESSAGES.append({'sender': user, 'text': text})
 
@@ -29,10 +33,9 @@ def handle_message():
         try:
             requests.post(webhook_url, json=payload, timeout=5)
         except Exception:
-            # If Teams webhook fails, still return success to user
             pass
 
-    return jsonify({'success': True})
+    emit('new_message', {'sender': user, 'text': text}, broadcast=True)
 
 @chatbot_bp.route('/teams', methods=['POST'])
 def teams_webhook():
@@ -43,7 +46,9 @@ def teams_webhook():
 
     text = data.get('text', '').strip()
     if text:
-        MESSAGES.append({'sender': 'Developer', 'text': text})
+        msg = {'sender': 'Developer', 'text': text}
+        MESSAGES.append(msg)
+        socketio.emit('new_message', msg, broadcast=True)
     # Teams expects a JSON response describing the message that will appear in the channel
     return jsonify({'type': 'message', 'text': 'Message received'})
 
@@ -51,3 +56,9 @@ def teams_webhook():
 def get_messages():
     """Return all chat messages."""
     return jsonify(MESSAGES)
+
+
+@socketio.on('connect')
+def handle_connect():
+    """Send existing messages to newly connected clients."""
+    emit('init_messages', MESSAGES)

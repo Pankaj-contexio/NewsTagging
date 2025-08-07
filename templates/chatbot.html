@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Chatbot</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-wfVd4G7yzTf/3GQ8LNk31DJ7tY79DbDeihdj5Z8SGvtQvECOH14R/2uOeGjn5ERa" crossorigin="anonymous"></script>
 </head>
 <body>
 <h2>Support Chat</h2>
@@ -12,31 +13,28 @@
 <button id="send">Send</button>
 
 <script>
-function loadMessages(){
-    $.getJSON('/chatbot/messages', function(data){
-        var msgs = $('#messages');
-        msgs.empty();
-        data.forEach(function(m){
-            msgs.append('<div><strong>'+m.sender+':</strong> '+m.text+'</div>');
-        });
-        msgs.scrollTop(msgs[0].scrollHeight);
-    });
+const socket = io();
+const msgs = $('#messages');
+
+function appendMessage(m){
+    msgs.append('<div><strong>'+m.sender+':</strong> '+m.text+'</div>');
+    msgs.scrollTop(msgs[0].scrollHeight);
 }
+
+socket.on('init_messages', function(data){
+    msgs.empty();
+    data.forEach(appendMessage);
+});
+
+socket.on('new_message', function(m){
+    appendMessage(m);
+});
+
 $('#send').on('click', function(){
     var text = $('#message').val();
-    $.ajax({
-        url:'/chatbot/message',
-        method:'POST',
-        contentType:'application/json',
-        data: JSON.stringify({text:text}),
-        success:function(){
-            $('#message').val('');
-            loadMessages();
-        }
-    });
+    socket.emit('send_message', {text:text});
+    $('#message').val('');
 });
-setInterval(loadMessages,3000);
-loadMessages();
 </script>
 </body>
 </html>
