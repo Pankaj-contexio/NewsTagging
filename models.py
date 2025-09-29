@@ -7,7 +7,9 @@ load_dotenv()  # Loads variables from .env into environment
 aws_key = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret = os.getenv('AWS_SECRET_ACCESS_KEY')
 MongoDB_URI = os.getenv('DATABASE_URL')
-client = MongoClient(MongoDB_URI)
+client = MongoClient(MongoDB_URI,
+                    maxPoolSize=50,  # adjust based on load
+                    minPoolSize=10)
 # db = client['database']
 # news_collection = db['NEWS_MAIN']
 # social_collection = db['SOCIAL_MAIN']
@@ -34,6 +36,7 @@ analytics_collection = db['analytics_data']
 party_share_history = db['party_share_history']
 usage_collection = db['usage_metrics']
 foreignRelations = db['ForeignRelations']
+economytrades = db['economicTrades']
 
 s3_client = boto3.client('s3',
                         aws_access_key_id=aws_key,

@@ -9,9 +9,10 @@ from botocore.exceptions import ClientError
 # routes/image_routes.py
 image_bp = Blueprint('image', __name__)
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 S3_BUCKET = 'newstagging'
 S3_FOLDER = 'uploaded_images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 def allowed_file(filename):
@@ -23,6 +24,7 @@ def upload():
     level = session['level']
     companyid = session['company']
     user_data = users_collection.find_one({"username": username})
+
     try:
         designation = user_data.get('designation')
     except:
@@ -31,46 +33,53 @@ def upload():
         company = user_data.get('company')
     except:
         company = ''
-    if 'image' not in request.files:
-        return 'No file part'
-    file = request.files['image']
-    if file.filename == '':
-        return 'No selected file'
+
     card_id = request.form.get('card_id', 'default')
     project_id = request.form.get('project_id', 'default')
     page = request.form.get('page', 'default')
     description = request.form.get('description', '')
 
-    
-    if file and allowed_file(file.filename):
+    if not card_id:
+        return jsonify({"message": "Document _id is missing."}), 400
+    try:
+        object_id = ObjectId(card_id)
+    except:
+        return jsonify({"message": "Invalid _id format."}), 400
+
+    # Case 1: File Upload
+    if 'image' in request.files and request.files['image'].filename != '':
+        file = request.files['image']
+
+        if not allowed_file(file.filename):
+            ext = file.filename.split('.')[-1]
+            current_app.logger.warning(f"Disallowed extension attempted: {ext}")
+            return jsonify({"error": "File with extension png, jpg, jpeg, gif are allowed"}), 400
+
         stored_filename = secure_filename(file.filename)
         s3_key = f"{S3_FOLDER}/{companyid}/{project_id}/{card_id}/{stored_filename}"
-        
-        # Check for duplicate in S3
-        # try:
-        #     s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
-        #     return jsonify({"error": "File name already exists"}), 400
-        # except ClientError as e:
-        #     if e.response['Error']['Code'] != '404':
-        #         return jsonify({"error": f"Error checking S3\n {e}"}), 500
-        
-        if not card_id:
-            return jsonify({"message": "Document _id is missing."}), 400
-        try:
-            object_id = ObjectId(card_id)
-        except:
-            return jsonify({"message": "Invalid _id format."}), 400
-        
 
-        # original_filename = secure_filename(file.filename)
         # Upload to S3
-        s3_client.upload_fileobj(file, S3_BUCKET, s3_key,ExtraArgs={
-                "ContentType": "image/jpeg",
+        s3_client.upload_fileobj(
+            file, 
+            S3_BUCKET, 
+            s3_key,
+            ExtraArgs={
+                "ContentType": "image/jpeg",  # could be improved by detecting actual MIME
                 "ACL": "public-read"
-            })
+            }
+        )
         file_url = f"https://{S3_BUCKET}.s3.ap-south-1.amazonaws.com/{s3_key}"
-        query = {"_id": object_id}
-        update = {
+
+    # Case 2: Image URL
+    elif 'image_url' in request.form and request.form['image_url'].strip() != '':
+        file_url = request.form['image_url'].strip()
+
+    else:
+        return jsonify({"error": "No image file or URL provided"}), 400
+
+    # Prepare DB update
+    query = {"_id": object_id}
+    update = {
         "$push": {
             f"addedImages.{companyid}.{project_id}.{card_id}": {
                 "path": file_url,
@@ -78,15 +87,15 @@ def upload():
             }
         }
     }
-        if page == 'news':
-            result = news_collection.update_one(query, update)  # , upsert=False
-        else:
-            result = social_collection.update_one(query, update)  # , upsert=False
-        current_app.logger.info(f"Image uploaded successfully: {file_url} by {username}")
-        return jsonify({"image_url": f"{file_url}", "description": description}), 200
+
+    if page == 'news':
+        result = news_collection.update_one(query, update)
     else:
-        print(f"File with extension {file.filename.split('.')[-1]} is not allowed")
-        return jsonify({"error": "File with extension png, jpg, jpeg, gif are allowed"}), 500
+        result = social_collection.update_one(query, update)
+
+    current_app.logger.info(f"Image added: {file_url} by {username}")
+
+    return jsonify({"image_url": file_url, "description": description}), 200
 
 
 @image_bp.route('/list-images/<companyid>/<project_id>/<card_id>')
@@ -118,18 +127,24 @@ def list_images(companyid, project_id, card_id):
 def delete_image():
     data = request.json
     companyid = session['company']
-    
+
     image_url = data.get('image_url')
     card_id = data.get('card_id', 'default')
     project_id = data.get('project_id', 'default')
     page = data.get('page', 'default')
+
     if not image_url or not card_id:
         return jsonify({"message": "Image URL or Document _id is missing."}), 400
     try:
         object_id = ObjectId(card_id)
     except:
         return jsonify({"message": "Invalid _id format."}), 400
-    print(f"Deleting image with URL: {image_url} for card_id: {card_id}, project_id: {project_id}, page: {page}")
+
+    current_app.logger.info(
+        f"Deleting image with URL: {image_url} for card_id: {card_id}, project_id: {project_id}, page: {page}"
+    )
+
+    # Remove reference from DB first
     query = {"_id": object_id}
     update = {
         "$pull": {
@@ -138,22 +153,21 @@ def delete_image():
             }
         }
     }
-    if page == 'news':
+    if page == "news":
         result = news_collection.update_one(query, update)
     else:
         result = social_collection.update_one(query, update)
 
-    prefix = f"https://{S3_BUCKET}.s3.ap-south-1.amazonaws.com/"
-    if image_url.startswith(prefix):
-        key = image_url[len(prefix):]
+    # Only delete from S3 if it's from our managed upload folder
+    s3_prefix = f"https://{S3_BUCKET}.s3.ap-south-1.amazonaws.com/uploaded_images/"
+    if image_url.startswith(s3_prefix):
+        try:
+            key = image_url[len(f"https://{S3_BUCKET}.s3.ap-south-1.amazonaws.com/"):]
+            s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
+            current_app.logger.info(f"S3 object deleted: {key}")
+        except Exception as e:
+            current_app.logger.error(f"S3 delete failed for {image_url}: {e}")
     else:
-        # if you stored relative paths, adjust accordingly:
-        key = image_url.lstrip('/')
-   
-    try:
-        s3_client.delete_object(Bucket=S3_BUCKET, Key=key)
-    except Exception as e:
-        # optionally log the error, but we've already removed the DB reference
-        current_app.logger.error(f"S3 delete failed for {key}: {e}")
-    current_app.logger.info(f"Image deleted successfully: {image_url} for card_id: {card_id}, project_id: {project_id}, page: {page}")
-    return jsonify({"message": "Image deleted successfully."})
+        current_app.logger.info(f"Skipped S3 delete (external URL): {image_url}")
+
+    return jsonify({"message": "Image deleted successfully."}), 200

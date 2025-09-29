@@ -1,0 +1,10 @@
+venv/
+logs/
+.idea/
+routes/__pycache__/
+routes/*.pyc
+.env
+__pycache__/
+*.sqlite3
+sync_mongo_newstagging.bat
+test.py

@@ -713,6 +713,9 @@ textarea{
                 </ul>
               </li>
             </ul>
+            <ul class="nav side-menu">
+                <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
+            </ul>
             <ul class="nav side-menu" style="display: none;" id="user-registration-mobile">
                 <li><a href="/register"><i class="fa fa-user"></i> Register User</a></li>
             </ul>
@@ -784,6 +787,9 @@ textarea{
                     </ul>
                   </li>
                 </ul>
+                <ul class="nav side-menu">
+                  <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
+                </ul>
                 <ul class="nav side-menu" style="display: none;" id="user-registration">
                     <li><a href="/register"><i class="fa fa-user"></i> Register User</a></li>
                 </ul>
@@ -844,6 +850,11 @@ textarea{
                         </a>
                     <a class="dropdown-item"  href="javascript:;">Help</a> -->
                       <a class="dropdown-item"  href="/logout"><i class="fa fa-sign-out pull-right"></i> Log Out</a>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="navbar-title" style="flex-grow: 1; text-align: center; font-size: 20px; font-weight: bold; width: 1000px;">
+                        News Intelligence Dashboard
                     </div>
                   </li>
   
@@ -1576,9 +1587,41 @@ textarea{
                         : null;
                 }
                 const contentWords = (editedContent ? editedContent.split(' ') : item.content?.split(' ')) ?? [];
-                const isContentLong = item.content?.split(' ').length > 100;
-                const shortContent = contentWords.slice(0, 100).join(' ');
-                const fullContent = editedContent || item.content || "";
+                // const isContentLong = item.content?.split(' ').length > 100;
+                // const shortContent = contentWords.slice(0, 100).join(' ');
+                // const fullContent = editedContent || item.content || "";
+                function truncateHtml(html, wordLimit) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+
+                    let count = 0;
+                    function walk(node) {
+                        for (let i = 0; i < node.childNodes.length; i++) {
+                        const child = node.childNodes[i];
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            const words = child.textContent.trim().split(/\s+/);
+                            if (count + words.length > wordLimit) {
+                            child.textContent = words.slice(0, wordLimit - count).join(' ') + '...';
+                            // Remove remaining siblings
+                            while (child.nextSibling) child.parentNode.removeChild(child.nextSibling);
+                            return true; // stop
+                            }
+                            count += words.length;
+                        } else if (child.nodeType === Node.ELEMENT_NODE) {
+                            if (walk(child)) return true;
+                        }
+                        }
+                        return false;
+                    }
+
+                    walk(temp);
+                    return temp.innerHTML;
+                }
+
+                const fullContent = editedContent || item.content || '';
+                const shortContent = truncateHtml(fullContent, 100);
+
+                const isContentLong = fullContent.split(/\s+/).length > 100;
                 
                 // console.log(fullContent+ ':' + isContentLong)
                 const sanitizedContent = item.content.replace(/["'<>&]/g, "").replace(/[\r\n]+/g, ' '); // Removes quotes, angle brackets, and ampersands
@@ -1587,294 +1630,341 @@ textarea{
 
 
                     <!-- CONTENT MAIL -->
-                      
-                        <div class="inbox-body">
-                          <div class="mail_heading row">
-                            
-                            <div class="col-md-12">
-                              
-                              <h4>
-                                <input type="checkbox" class="post-checkbox" value="${item._id}" id="checkbox-${item._id}" style="margin-right: 8px; zoom: 1.5;">
-                                <img src="${dpImage}" alt="avatar" class="rounded-circle" style="width: 30px; height: 30px; margin-right: 10px;">
-                                <a href="${postLink}" target="_blank">${organizationName}</a>
-                                <span class="site-logo">${siteLogo}</span>
-                                
-                                <button class="remove-from-project-btn btn btn-danger"
-                                        data-id="${item._id}"
-                                        data-type="social"
-                                        style="font-size: 12px; padding: 6px 6px; line-height: 1; float: inline-end;">
-                                    <i class="fa fa-trash-o" style="margin-right: 2px;"></i> Delete
-                                </button>
-                                </h4>
-                            </div>
-                          </div>
-                          <div class="sender-info">
-                            <div class="row">
-                              <div class="col-md-12">
-                                <strong>${organizationName}</strong>
-                                <!--<span>(jon.doe@gmail.com)</span> to
-                                <strong>me</strong>
-                                <a class="sender-dropdown"><i class="fa fa-chevron-down"></i></a>-->
-                              </div>
-                            </div>
-                          </div>
-                          <div class="view-mail temp_view_more">
-                            <p class="social-content" contenteditable="true">${isContentLong ? shortContent : fullContent}${isContentLong ? '...' : ''}
-                            ${isContentLong ? '<button class="view-more-btn btn btn-link btn-sm">View More</button></p>' : ''}
-                          </div>
-                          <div class="toolbar" style="display: none;">
-                            <button class="btn highlight-btn" contenteditable="false">
-                                <i class="bi bi-highlighter"></i> Highlight
-                            </button>
-                            <div class="color-picker-container">
-                                <input type="color" class="colorPicker" value="#ffff00">
-                                <div class="color-palette">
-                                    <div class="color-box" style="background-color: #ff0000;" data-color="#ff0000"></div>
-                                    <div class="color-box" style="background-color: #00ff00;" data-color="#00ff00"></div>
-                                    <div class="color-box" style="background-color: #0000ff;" data-color="#0000ff"></div>
-                                    <div class="color-box" style="background-color: #ffff00;" data-color="#ffff00"></div>
-                                    <div class="color-box" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
-                                    <div class="color-box" style="background-color: #00ffff;" data-color="#00ffff"></div>
-                                </div>
-                            </div>
+<div class="inbox-body">
 
-                            <button class="btn underline-btn" contenteditable="false">
-                                <i class="bi bi-type-underline"></i> Underline
-                            </button>
+  <div class="mail_heading row">
+    <div class="col-md-12">
+      <h4>
+        <input type="checkbox" class="post-checkbox" value="${item._id}" id="checkbox-${item._id}" style="margin-right: 8px; zoom: 1.5;">
+        <img src="${dpImage}" alt="avatar" class="rounded-circle" style="width: 30px; height: 30px; margin-right: 10px;">
+        <a href="${postLink}" target="_blank">${organizationName}</a>
+        <span class="site-logo">${siteLogo}</span>
 
-                            <button class="btn italic-btn" contenteditable="false">
-                                <i class="bi bi-type-italic"></i> Italic
-                            </button>
-                            <button class="btn bold-btn" contenteditable="false">
-                                <i class="bi bi-type-bold"></i> Bold
-                            </button>
-                          </div>
+        <button class="remove-from-project-btn btn btn-danger"
+          data-id="${item._id}"
+          data-type="social"
+          style="font-size: 12px; padding: 6px 6px; line-height: 1; float: inline-end;">
+          <i class="fa fa-trash-o" style="margin-right: 2px;"></i> Delete
+        </button>
+      </h4>
+    </div>
+  </div>
 
+  <div class="sender-info">
+    <div class="row">
+      <div class="col-md-12">
+        <strong>${organizationName}</strong>
+      </div>
+    </div>
+  </div>
 
-                          <div style="border: 0px;">
-                              <button class="view-toolbar-btn"><i class="bi bi-brush"></i></button>
+  <div class="view-mail temp_view_more">
+    <div class="social-content" contenteditable="true">
+      ${isContentLong ? shortContent : fullContent}${isContentLong ? '...' : ''}
+      ${isContentLong ? '<button class="view-more-btn btn btn-link btn-sm">View More</button></div>' : ''}
+    </div>
+  </div>
 
-                              <button class="send-btn"><i class="bi bi-floppy-fill"></i></button>
-                              <button class="add-to-project-btn" data-id="${item._id}" data-type="social"><i class="fa fa-bookmark" data-id="${item._id}" data-type="news"></i></button>
-                              <p class="qcdone-btn" style="color:green;display:none;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
-                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"></path>
-                                </svg>
-                                <span>QC Done By ${qcdoneby}</span>
-                              </p>
-                          </div>
-                    
-                         
-                          <table style="width: 100%; border-collapse: collapse;" class="image-preview-table">
-                                ${imageHtml}
-                                <td style="text-align: center; padding: 10px; display:none;" class="image-preview-stored" >
-                                    <button style="width: 150px; height: 150px; border: none; background: #f0f0f0; cursor: pointer;" onclick="uploadimage('${id}', 'social', ${project_id ? `'${project_id}'` : 'null'})">
-                                        <i class="fa fa-plus-square" style="font-size: 48px; color: #888;"></i>
-                                    </button>
-                                    
-                                </td>
-                            </tr>
-                                
-                          </table>
-                            <div class="tweets" style="display:none;"></div>
-                        
-                          <hr>
-                          <!-- /carousel images -->
-                          <div class="publish-shares">
-                            <div class="publish col-md-6">
-                                <div class="author-name">Written By: ${organizationName}  <i class="bi bi-twitter-x"></i><a href="${profile_link}" target="_blank" style="color:#0374ba;">${organizationName}</a></div>
-                                <div class="publish-date">
-                                    <span>${country.name}</span>
-                                    Published Date: ${postDate}
-                                </div> 
-                                <div class="sector-name">
-                                    Site: ${site.name}
-                                </div> 
-                                <div>
-                                    <img width="20" height="20" src="https://img.icons8.com/ios-glyphs/30/facebook-like--v1.png" alt="facebook-like--v1"/> ${like},
-                                    <img width="20" height="20" src="https://img.icons8.com/material-outlined/24/comments--v1.png" alt="comments--v1"/> ${commentsCount},
-                                    <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/retweet.png" alt="retweet"/> ${repost},
-                                    <img width="20" height="20" src="https://img.icons8.com/ios/50/bookmark-ribbon--v1.png" alt="bookmark-ribbon--v1"/> ${bookmark},
-                                    <img width="20" height="20" src="https://img.icons8.com/ios-glyphs/30/visible--v1.png" alt="visible--v1"/> ${views},
-                                    
-                                </div>
-                            </div>
-                            <div class="social col-md-6" style="display: flex; justify-content: flex-end;">
-                                <div class="share-buttons" style="display: inline-block;">
-                                    <!-- WhatsApp Share Icon -->
-                                    <button onclick="shareViaWhatsApp('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
-                                        <i class="fab fa-whatsapp"></i>
-                                    </button>
-                                    <!-- Facebook Share Icon -->
-                                    <button onclick="shareViaFacebook('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
-                                        <i class="fab fa-facebook"></i>
-                                    </button>
-                                    <!-- Twitter Share Icon -->
-                                    <button onclick="shareViaTwitter('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
-                                        <i class="fab fa-twitter"></i>
-                                    </button>
-                                    <!-- General Share Button -->
-                                    <button onclick="sharePost('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-general">
-                                        <i class="bi bi-share-fill"></i>
-                                    </button>
-                                </div>
-                            </div>
-                          </div>
-                          <div class="col-md-12">
-                                <hr>
-                                <h4>Update Party Rating</h4>
-                            </div>
-                          <div class="col-md-12 political-rating" style="display: flex; align-items: center; justify-content: space-between;">
-                                <div class="col">
-                                  <label for="rate-party">
-                                       Select Party<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select rate-party" name="add-rating" required>
-                                    <option value="">Select Party</option>
-                                    ${party_analytics
-                                    .filter(party => party.country === countryId)
-                                    .map(party => `<option value="${party.name}">${party.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="party_rating">
-                                       Give Rating<span style="color: red;">*</span>
-                                  </label>
-                                  <input type="number" class="form-control party_rating" name="party_rating" min="0" max="3" value="0" required>
-                                  
-                                </div>
-                                <div class="col">
-                                  <label for="remove-rate-party">
-                                       Select Party<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select remove-rate-party" name="remove-rating" required>
-                                    <option value="">Select Party</option>
-                                    <option value="All" selected>All</option>
-                                    ${party_analytics
-                                    .filter(party => party.country === countryId)
-                                    .map(party => `<option value="${party.name}">${party.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="remove-party_rating">
-                                       Remove Rating<span style="color: red;"></span>
-                                  </label>
-                                  <input type="number" class="form-control remove-party_rating" name="remove-party_rating" min="0" max="3" value="0">
-                                  
-                                </div>
-                                <div class="col d-flex">
-                                  <button type="submit" class="btn btn-success w-100" onclick="updatepartyrating('${id}', '${countryId}')"  style="margin-top: 30px;">Submit</button>
-                                </div>
-                                
-                          </div>
+  <div class="toolbar" style="display: none;">
+    <button class="btn highlight-btn" contenteditable="false">
+      <i class="bi bi-highlighter"></i> Highlight
+    </button>
+    <div class="color-picker-container">
+      <input type="color" class="colorPicker" value="#ffff00">
+      <div class="color-palette">
+        <div class="color-box" style="background-color: #ff0000;" data-color="#ff0000"></div>
+        <div class="color-box" style="background-color: #00ff00;" data-color="#00ff00"></div>
+        <div class="color-box" style="background-color: #0000ff;" data-color="#0000ff"></div>
+        <div class="color-box" style="background-color: #ffff00;" data-color="#ffff00"></div>
+        <div class="color-box" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
+        <div class="color-box" style="background-color: #00ffff;" data-color="#00ffff"></div>
+      </div>
+    </div>
 
-                            <div class="col-md-12">
-                                <hr>
-                                <h4>Update Foreign Relation</h4>
-                            </div>
-                            
+    <button class="btn underline-btn" contenteditable="false">
+      <i class="bi bi-type-underline"></i> Underline
+    </button>
+
+    <button class="btn italic-btn" contenteditable="false">
+      <i class="bi bi-type-italic"></i> Italic
+    </button>
+    <button class="btn bold-btn" contenteditable="false">
+      <i class="bi bi-type-bold"></i> Bold
+    </button>
+  </div>
+
+  <div style="border: 0px;">
+    <button class="view-toolbar-btn"><i class="bi bi-brush"></i></button>
+    <button class="send-btn"><i class="bi bi-floppy-fill"></i></button>
+    <button class="add-to-project-btn" data-id="${item._id}" data-type="social">
+      <i class="fa fa-bookmark" data-id="${item._id}" data-type="news"></i>
+    </button>
+    <p class="qcdone-btn" style="color:green;display:none;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+        class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+        <path
+          d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z">
+        </path>
+      </svg>
+      <span>QC Done By ${qcdoneby}</span>
+    </p>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse;" class="image-preview-table">
+    ${imageHtml}
+    <td style="text-align: center; padding: 10px; display:none;" class="image-preview-stored">
+      <button
+        style="width: 150px; height: 150px; border: none; background: #f0f0f0; cursor: pointer;"
+        onclick="uploadimage('${id}', 'social', ${project_id ? `'${project_id}'` : 'null'})">
+        <i class="fa fa-plus-square" style="font-size: 48px; color: #888;"></i>
+      </button>
+    </td>
+    </tr>
+  </table>
+
+  <div class="tweets" style="display:none;"></div>
+
+  <!-- SECOND HR -->
+  <hr> <!-- moved to stay after publish-shares -->
+
+  <div class="publish-shares">
+    <div class="publish col-md-6">
+      <div class="author-name">
+        Written By: ${organizationName}
+        <i class="bi bi-twitter-x"></i><a href="${profile_link}" target="_blank"
+          style="color:#0374ba;">${organizationName}</a>
+      </div>
+      <div class="publish-date">
+        <span>${country.name}</span>
+        Published Date: ${postDate}
+      </div>
+      <div class="sector-name">
+        Site: ${site.name}
+      </div>
+      <div>
+        <img width="20" height="20" src="https://img.icons8.com/ios-glyphs/30/facebook-like--v1.png"
+          alt="facebook-like--v1" /> ${like},
+        <img width="20" height="20" src="https://img.icons8.com/material-outlined/24/comments--v1.png"
+          alt="comments--v1" /> ${commentsCount},
+        <img width="20" height="20" src="https://img.icons8.com/ios-filled/50/retweet.png" alt="retweet" /> ${repost},
+        <img width="20" height="20" src="https://img.icons8.com/ios/50/bookmark-ribbon--v1.png"
+          alt="bookmark-ribbon--v1" /> ${bookmark},
+        <img width="20" height="20" src="https://img.icons8.com/ios-glyphs/30/visible--v1.png" alt="visible--v1" />
+        ${views},
+      </div>
+    </div>
+    <div class="social col-md-6" style="display: flex; justify-content: flex-end;">
+      <div class="share-buttons" style="display: inline-block;">
+        <button onclick="shareViaWhatsApp('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
+          <i class="fab fa-whatsapp"></i>
+        </button>
+        <button onclick="shareViaFacebook('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
+          <i class="fab fa-facebook"></i>
+        </button>
+        <button onclick="shareViaTwitter('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-icon">
+          <i class="fab fa-twitter"></i>
+        </button>
+        <button onclick="sharePost('${postLink}', '${organizationName}', '${sanitizedContent.replace(/'/g, "\\'")}')" class="btn share-general">
+          <i class="bi bi-share-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIRD HR -->
+  <hr> <!-- moved before select chart -->
+
+  <div class="col-md-12">
+    <select id="rating-selector-${id}" onchange="toggleSection('${id}')">
+      <option>Select Chart</option>
+      <option>Political Party</option>
+      <option>Foreign Policy</option>
+      <option>Economy</option>
+    </select>
+  </div>
 
 
-                            <div class="col-md-12 foreignrelation-rating" style="display: flex; align-items: center; justify-content: space-between;">
-                                <div class="col">
-                                  <label for="country-relation">
-                                       Foreign Relation Of<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select country-relation" name="country-relation" required>
-                                    <option value="">Select Country</option>
-                                    ${countrys
-                                    .filter(country => country.count > 0)
-                                    .map(country => `<option value="${country.id}">${country.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="rate-country">
-                                       Foreign Relation with Country<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select rate-country" name="rate-country" required>
-                                    <option value="">Select Country</option>
-                                    ${countrys
-                                    .filter(country => country.count > 0)
-                                    .map(country => `<option value="${country.id}">${country.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="country_rating">
-                                       Give Rating(-3 to 3)<span style="color: red;">*</span>
-                                  </label>
-                                  <input type="number" class="form-control country_rating" name="country_rating" min="-3" max="3" value="0" required>
-                                  
-                                </div>
-                                <div class="col d-flex">
-                                  <button type="submit" class="btn btn-success w-100"  style="margin-top: 30px;" onclick="updateForeignRelation('${id}')">Submit</button>
-                                </div>
-                            </div>
 
-                            <div class="col-md-12">
-                                <hr>
-                                <h4>Update Tags</h4>
-                            </div>
-                          <div class="selected-items col-md-12" style="display: flex; align-items: center;">    
-                              <div class="dropdown-container">
-                                  <div class="dropdown">
-                                      <input type="text" class="search-box" placeholder="Search...">
-                                      <ul class="dropdown-options">
-                                          ${tagList.map(tag => `<li data-value="${tag}" value="${tag}">${tag}</li>`).join('')}
-                                      </ul>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="notes-container col-md-12" style="display:none;">
-                            <h2>Notes</h2>
-                            <div class="rich-editor-container" style="margin-top: 10px;">
+<!-- Party Rating Section -->
+<div class="container-analytics" style="display: none;">
+    <div class="section-title">Political Party</div>
+    <div class="row">
+    <select class="party-country-selector" style="padding: 6px;border-radius: 4px;">
+        <option value="">Select Party</option>
+        ${party_analytics
+            .filter(party => party.country === countryId)
+            .map(party => `<option value="${party.name}">${party.name}</option>`)
+            .join('')}
+    </select>
+    <div class="radio-group">
+        <div>Add Rating</div>
+        <label><input type="radio" name="add-rating" value="1"> 1</label>
+        <label><input type="radio" name="add-rating" value="2"> 2</label>
+        <label><input type="radio" name="add-rating" value="3"> 3</label>
+    </div>
+    <!-- Multi-select Party Dropdown -->
+    <div class="dropdown party-dropdown">
+        <button class="dropbtn" style="border-radius: 4px;">Remove Rating From ▼</button>
+        <div class="dropdown-content party-options">
+        <!-- Filled by JS -->
+        <label><input type="checkbox" value="All">All</label>
+        ${party_analytics
+            .filter(party => party.country === countryId)
+            .map(party => `<label><input type="checkbox" value="${party.name}"> ${party.name}</label>`)
+            .join('')}
+        </div>
+    </div>
 
-                                <div class="editor-input-container">
-                                    <div class="editor-input" contenteditable="true" placeholder="Enter Notes Here"></div>
-                                    <button class="editor-send-btn"><i class="bi bi-send-fill"></i></button>
-                                </div>
-                            </div>
-                            <ul class="dynamicList"></ul>
-                          </div>
+    <button class="submit-btn" onclick="updatepartyrating('${id}', '${countryId}')">submit</button>
+    </div>
+</div>
 
-                          <div class="observations-container col-md-12">
-                              <h2>Observation</h2>
-                              <div class="rich-editor-container" style="margin-top: 10px;">
-                                    <div class="editor-input-container">
-                                        <div class="observation-editor-input" contenteditable="true" placeholder="Enter Observations Here"></div>
-                                        <button class="observation-editor-send-btn"><i class="bi bi-send-fill"></i></button>
-                                    </div>
-                                </div>
-                              <ul class="observations-dynamicList">
+<!-- Foreign Policy Section -->
+<div class="container-analytics" style="display: none;">
+    <div class="section-title">Foreign Policy</div>
+    <div class="row">
+    <select class="foreign-country-selector" style="padding: 6px;border-radius: 4px;">
+        <option>Foreign Relation of</option>
+        ${countrys
+            .filter(country => country.count > 0)
+            .map(country => `<option value="${country.id}">${country.name}</option>`)
+            .join('')}
+    </select>
 
-                              </ul>
-                          </div>
-                        <div class="insights-container col-md-12">
-                              <h2>Insights</h2>
-                              <div class="rich-editor-container" style="margin-top: 10px;">
-                                    <div class="editor-input-container">
-                                        <div class="insight-editor-input" contenteditable="true" placeholder="Enter Insights Here"></div>
-                                        <button class="insight-editor-send-btn"><i class="bi bi-send-fill"></i></button>
-                                    </div>
-                              </div>
-                              <ul class="insights-dynamicList">
+    <!-- Multi-select Country Dropdown -->
+    <div class="dropdown foreign-dropdown">
+        <button class="dropbtn" style="border-radius: 4px;">Foreign Relation with ▼</button>
+        <div class="dropdown-content foreign-options">
+        <!-- Filled by JS -->
+        ${countrys
+            .filter(country => country.count > 0)
+            .map(country => `<label><input type="checkbox" value="${country.id}"> ${country.name}</label>`)
+            .join('')}
+        </div>
+    </div>
 
-                              </ul>
-                          </div>
+    <div class="radio-group">
+        <div>Rating</div>
+        <label><input type="radio" name="fp-rating" value="1"> 1</label>
+        <label><input type="radio" name="fp-rating" value="2"> 2</label>
+        <label><input type="radio" name="fp-rating" value="3"> 3</label>
+    </div>
+    <div class="radio-group">
+        <div><br></div>
+        <label><input type="radio" name="fp-rating" value="-1"> -1</label>
+        <label><input type="radio" name="fp-rating" value="-2"> -2</label>
+        <label><input type="radio" name="fp-rating" value="-3"> -3</label>
+    </div>
+    
 
-                          <div class="recording-container col-md-12" data-id="${item._id}" data-type="news" style="display:none;">
-                                <button class="record-btn"><span class="mic-symbol">🎤</span> Recording</button>
-                                <span class="record-count">0</span>
-                            </div>
-                            <div class="col-md-12 publish-btn-div" style="display: none; justify-content: flex-end;">
-                                <button class="btn btn-primary publish-btn" style="margin-left: 10px; font-size: smaller;" onclick="publishNews('${item._id}')" id="publish-btn-${item._id}">
-                                    <i class="fa fa-arrow-right"></i> Publish
-                                </button>
-                            </div>
-                        </div>
+    <button class="submit-btn" onclick="updateForeignRelation('${id}')">submit</button>
+    </div>
+</div>
+
+<!-- Economy Section -->
+<div class="container-analytics" style="display: none; padding:10px;">
+    <div class="section-title" style="margin-bottom:8px; font-weight:bold;">Economy</div>
+    <div class="row" style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+
+        <!-- Country Selector -->
+        <select class="economy-country-selector" 
+                style="padding:6px 10px; font-size:14px; border:1px solid #ccc; border-radius:4px;margin-left: 10px;margin-bottom: 3px;">
+        <option>Trade With</option>
+        ${countrys
+            .filter(country => country.count > 0)
+            .map(country => `<option value="${country.id}">${country.name}</option>`)
+            .join('')}
+        </select>
+
+        <!-- Multi-select sector Dropdown -->
+        <div class="dropdown economy-dropdown">
+            <button class="dropbtn" style="border-radius:4px;">Trade in Sector▼</button>
+            <div class="dropdown-content economy-options">
+            <!-- Filled by JS -->
+                <label><input type="checkbox" value="Defence">Defence</label>
+                <label><input type="checkbox" value="Public Infra">Public Infra</label>
+                <label><input type="checkbox" value="IT / telecom">IT / telecom</label>
+                <label><input type="checkbox" value="Transportation & Logistics">Transportation & Logistics</label>
+                <label><input type="checkbox" value="Goods">Goods</label>
+                <label><input type="checkbox" value="Energy/Chemicals">Energy/Chemicals</label>
+                <label><input type="checkbox" value="Public Inv">Public Inv</label>
+                <label><input type="checkbox" value="Clothing">Clothing</label>
+                <label><input type="checkbox" value="Food">Food</label>
+                <label><input type="checkbox" value="Education">Education</label>
+                <label><input type="checkbox" value="Medical Essentials">Medical Essentials</label>
+            </div>
+        </div>
+        <div>
+            <input type="number" class="trade-value" placeholder="Trade Value (in million dollars)" style="padding: 5px;margin-bottom: 5px;border:1px solid #ccc; border-radius:4px;">
+        </div>
+        <button class="submit-btn" onclick="updateEconomy('${id}', '${countryId}')">submit</button>
+    </div>
+</div>
+
+
+
+
+    <div class="col-md-12">
+        <hr>
+        <h4>Update Tags</h4>
+    </div>
+    <div class="selected-items col-md-12" style="display: flex; align-items: center;">    
+        <div class="dropdown-container">
+            <div class="dropdown">
+                <input type="text" class="search-box" placeholder="Search...">
+                <ul class="dropdown-options">
+                    ${tagList.map(tag => `<li data-value="${tag}" value="${tag}">${tag}</li>`).join('')}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="notes-container col-md-12" style="display:none;">
+    <h2>Notes</h2>
+    <div class="rich-editor-container" style="margin-top: 10px;">
+
+        <div class="editor-input-container">
+            <div class="editor-input" contenteditable="true" placeholder="Enter Notes Here"></div>
+            <button class="editor-send-btn"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+    <ul class="dynamicList"></ul>
+    </div>
+
+    <div class="observations-container col-md-12">
+        <h2>Observation</h2>
+        <div class="rich-editor-container" style="margin-top: 10px;">
+            <div class="editor-input-container">
+                <div class="observation-editor-input" contenteditable="true" placeholder="Enter Observations Here"></div>
+                <button class="observation-editor-send-btn"><i class="bi bi-send-fill"></i></button>
+            </div>
+        </div>
+        <ul class="observations-dynamicList">
+
+        </ul>
+    </div>
+<div class="insights-container col-md-12">
+        <h2>Insights</h2>
+        <div class="rich-editor-container" style="margin-top: 10px;">
+            <div class="editor-input-container">
+                <div class="insight-editor-input" contenteditable="true" placeholder="Enter Insights Here"></div>
+                <button class="insight-editor-send-btn"><i class="bi bi-send-fill"></i></button>
+            </div>
+        </div>
+        <ul class="insights-dynamicList">
+
+        </ul>
+    </div>
+
+    <div class="recording-container col-md-12" data-id="${item._id}" data-type="news" style="display:none;">
+        <button class="record-btn"><span class="mic-symbol">🎤</span> Recording</button>
+        <span class="record-count">0</span>
+    </div>
+    <div class="col-md-12 publish-btn-div" style="display: none; justify-content: flex-end;">
+        <button class="btn btn-primary publish-btn" style="margin-left: 10px; font-size: smaller;" onclick="publishNews('${item._id}')" id="publish-btn-${item._id}">
+            <i class="fa fa-arrow-right"></i> Publish
+        </button>
+    </div>
+</div>
 
                       
                       <!-- /CONTENT MAIL -->
@@ -3858,5 +3948,87 @@ document.addEventListener('DOMContentLoaded', function() {
     
   
   </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='analytics/analytics_rating.css') }}">
+<script>
+    // Toggle dropdowns
+    document.querySelectorAll(".dropbtn").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        closeAllDropdowns();
+        this.parentElement.classList.toggle("show");
+      });
+    });
+    window.onclick = () => closeAllDropdowns();
+    function closeAllDropdowns() {
+      document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+    }
+
+    // Fetch and populate data
+    async function getdata() {
+      const response = await fetch('/api/analytics');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const analytics_data = await response.json();
+
+      let party_analytics = analytics_data.analytics.party;
+      let countrys = analytics_data.countrys;
+      // Fill countries in selectors
+      console.log(document.querySelector('.party-country-selector'));
+      document.querySelectorAll('.party-country-selector, .foreign-country-selector')
+        .forEach(select => {
+          countrys
+            .filter(c => c.count > 0)
+            .forEach(c => {
+              select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+        });
+
+      // On selecting a country, load parties
+      document.querySelectorAll('.party-country-selector').forEach(select => {
+        select.addEventListener('change', e => {
+          const countryId = e.target.value;
+          const partyOptions = select.closest('.row').querySelector('.party-options');
+          partyOptions.innerHTML = party_analytics
+            .filter(p => p.country === countryId)
+            .map(p => `<label><input type="checkbox" value="${p.name}"> ${p.name}</label>`)
+            .join('');
+        });
+      });
+
+      // Load all countries in Foreign Policy dropdown
+      document.querySelectorAll('.foreign-options').forEach(container => {
+        container.innerHTML = countrys
+          .map(c => `<label><input type="checkbox" value="${c.id}"> ${c.name}</label>`)
+          .join('');
+      });
+    }
+
+    getdata();
+</script>
+  <script>
+    function toggleSection(id) {
+    let selector = document.querySelector(`#rating-selector-${id}`);
+    const selectedValue = selector.value;
+
+    updateContainer(id, selectedValue);
+
+    function updateContainer(id, selectedValue) {
+        const card = document.getElementById(id);
+
+        // Hide all sections first
+        let containers = card.querySelectorAll('.container-analytics');
+        containers.forEach(container => container.style.display = 'none');
+
+        // Show the selected section
+        let titles = card.querySelectorAll('.section-title');
+        titles.forEach(title => {
+            if (title.textContent.trim() === selectedValue) {
+                let container = title.closest('.container-analytics');
+                if (container) container.style.display = 'block';
+            }
+        });
+    }
+}
+
+</script>
   </body>
 </html>

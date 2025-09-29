@@ -360,6 +360,9 @@
               </ul>
             </li>
           </ul>
+          <ul class="nav side-menu">
+            <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
+          </ul>
 
           <button class="create-project-btn btn btn-primary">+ Create Project</button>
         </div>
@@ -422,6 +425,9 @@
                       <li><a href="/SocialMedia">Social Feeds</a></li>
                     </ul>
                   </li>
+                </ul>
+                <ul class="nav side-menu">
+                  <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
                 </ul>
                 <ul class="nav side-menu" style="display: none;" id="user-registration">
                   <li><a href="/register"><i class="fa fa-user"></i> Register User</a></li>
@@ -638,7 +644,7 @@
                     </div>
 
 
-                    <div class="col-md-4 col-sm-6">
+                    <div class="col-md-3 col-sm-6">
                       <div class="form-floating">
                         <select id="news-country" class="form-control" required>
                           <option value="">Select Country</option>
@@ -648,7 +654,7 @@
                       </div>
                     </div>
 
-                    <div class="col-md-4 col-sm-6">
+                    <div class="col-md-3 col-sm-6">
                       <div class="form-floating">
                         <select id="news-sector" class="form-control" required>
                           <option value="">Select Sector</option>
@@ -657,30 +663,23 @@
                       </div>
                     </div>
 
-<!--                    <div class="col-md-4 col-sm-6">-->
-<!--                      <div class="form-floating">-->
-<!--                        <select id="news-source" class="form-control" onchange="showTextbox(this)" required>-->
-<!--                          <option value="">Select Source</option>-->
-<!--                        </select>-->
-<!--                        &lt;!&ndash; Textbox hidden initially &ndash;&gt;-->
-<!--                        <div id="otherInputDiv" style="display:none; margin-top:3px;">-->
-<!--                          &lt;!&ndash; <label for="otherInput">Please specify:</label> &ndash;&gt;-->
-<!--                          <input type="text" id="otherInput" name="otherInput" class="form-control" placeholder="Enter source name">-->
-<!--                          <input type="text" id="otherInputurl" name="otherInputurl" class="form-control" placeholder="Enter Home Page url">-->
+                    <div class="col-md-3 col-sm-6">
+                      <div class="form-floating">
+                        <select id="news-project" class="form-control">
+                          <option value="">Select Project</option>
+                        </select>
+                        <label for="news-project">Project</label>
+                      </div>
+                    </div>
 
-<!--                        </div>-->
-<!--                        <label for="news-source">News Source</label>-->
-<!--                      </div>-->
-
-<!--                    </div>-->
-
-
-                    <div class="col-md-4 col-sm-6">
+                    <div class="col-md-3 col-sm-6">
                       <div class="form-floating">
                         <input type="date" id="news-date" class="form-control" required>
                         <label for="news-date">News Date<span style="color: red;">*</span></label>
                       </div>
                     </div>
+
+                    
 
 
 
@@ -898,7 +897,7 @@ async function fetchArticleData() {
         // Directly populate fields
         document.getElementById('news-title').value = data.title || '';
         document.getElementById('news-content').value = data.text || '';
-        document.getElementById('news-image-urls').value = data.images.join(', ') || '';
+        document.getElementById('news-image-urls').value = data.images.join('||| ') || '';
     } catch (err) {
         customAlert("Failed to fetch article data");
     }
@@ -968,10 +967,11 @@ document.getElementById("page-name").addEventListener("change", function () {
             news_url: document.getElementById("news-url").value,
             country: document.getElementById("news-country").value,
             sector: document.getElementById("news-sector").value,
+            project: document.getElementById("news-project").value,
             published_date: document.getElementById("news-date").value,
             title: document.getElementById("news-title").value,
             content: document.getElementById("news-content").value,
-            image: document.getElementById("news-image-urls").value.split(',').map(url => url.trim())
+            image: document.getElementById("news-image-urls").value.split('||| ').map(url => url.trim())
         };
     } else if (pageType === "social") {
       formData.site = document.getElementById("social-site").value;
@@ -1009,7 +1009,7 @@ document.getElementById("page-name").addEventListener("change", function () {
   function showNewsPreview() {
         const title = document.getElementById('news-title').value;
         const content = document.getElementById('news-content').value;
-        const images = document.getElementById('news-image-urls').value.split(',').map(url => url.trim());
+        const images = document.getElementById('news-image-urls').value.split('||| ').map(url => url.trim());
 
         // Update preview elements
         document.getElementById('preview-title').textContent = title;
@@ -1053,12 +1053,18 @@ document.getElementById("page-name").addEventListener("change", function () {
       socialFilters('country', data2.country);
       socialFilters('person', data2.person);
 
-      function newsFilters(filterType, data) {
+      
+      }
+
+      getfiltersdata()
+  </script>
+  <script>
+    function newsFilters(filterType, data) {
         const filterContainer = document.getElementById(`news-${filterType}`);
         if (!filterContainer) return;
         data.forEach(item => {
           const option = document.createElement('option');
-          option.value = item.id;
+          option.value = item.id || item._id;
           option.innerText = `${item.name}`;
           filterContainer.appendChild(option);
         });
@@ -1075,9 +1081,6 @@ document.getElementById("page-name").addEventListener("change", function () {
                   filterContainer.appendChild(option);
               });
           }
-      }
-
-      getfiltersdata()
   </script>
 <script>
   let currentUserlevel = "{{ level }}";
@@ -1127,14 +1130,14 @@ document.getElementById("page-name").addEventListener("change", function () {
       const projects = await response.json();
       const projectList = document.getElementById('project-list');
       projectList.innerHTML = '';
-
+      newsFilters('project', projects);
       projects.forEach(project => {
           const projectItem = document.createElement('li');
           projectItem.style.display = "flex";
           projectItem.style.justifyContent = "space-between";
           projectItem.style.alignItems = "center";
           projectItem.innerHTML = `
-              <a href="/News?project_id=${project._id}" data-project-id="${project._id}" class="droppable-project">
+              <a href="/projects?project_id=${project._id}" data-project-id="${project._id}" class="droppable-project">
                   ${project.name} (${project.post_count})
               </a>
               <button class="delete-project-btn btn btn-danger"
@@ -1159,7 +1162,7 @@ document.getElementById("page-name").addEventListener("change", function () {
           projectItem.style.justifyContent = "space-between";
           projectItem.style.alignItems = "center";
           projectItem.innerHTML = `
-              <a href="/News?project_id=${project._id}" data-project-id="${project._id}" class="droppable-project">
+              <a href="/projects?project_id=${project._id}" data-project-id="${project._id}" class="droppable-project">
                   ${project.name} (${project.post_count})
               </a>
               <button class="delete-project-btn btn btn-sm btn-danger" data-id="${project._id}">✖</button>

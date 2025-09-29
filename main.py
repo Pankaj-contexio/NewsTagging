@@ -45,7 +45,6 @@ app.register_blueprint(projects_bp, url_prefix='/api/projects')
 app.register_blueprint(pdf_bp, url_prefix='/')
 app.register_blueprint(reports_bp, url_prefix='/')
 app.register_blueprint(analytics_bp, url_prefix='/')
-app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
 
 # CORS(app, origins=["http://qa.platformxplus.com:5000"])
 
@@ -78,6 +77,7 @@ company_collection = {"company":{"Contexio":"A", "Reinlabs":"B"}}
 
 def get_data_from_db(collection, query, skip=0, limit=20, sort=None):
     """Fetch data from MongoDB with pagination and filters."""
+    print(f"fetching data and sorting with {sort}")
     data = list(collection.find(query).sort(sort).skip(skip).limit(limit))
     for document in data:
         document['_id'] = str(document['_id'])
@@ -433,7 +433,8 @@ def get_news():
         ]
 
     #Add sorting by gather_date in descending order (latest first)
-    sort = [("published_date", -1)]
+    # sort = [("published_date", -1)]
+    sort = [("published_date", -1), ("_id", -1)]
     # Fetch news from the database with pagination
     if qcdone== 'all':
         query[f'{company}.QC_Done.active'] = True
@@ -601,7 +602,8 @@ def get_social():
 
     
     # Add sorting by gather_date in descending order (latest first)
-    sort = [("post_date", -1)]
+    # sort = [("post_date", -1)]
+    sort = [("post_date", -1), ("_id", -1)]
     social_data = get_data_from_db(social_collection, query, skip=skip, limit=limit, sort=sort)
     
 
@@ -1260,6 +1262,46 @@ def extract_base_url(url):
 
 @app.route('/addcard', methods=['POST'])
 def addcard_post():
+    def add_posts_to_project(project_id, post_id):
+        """Add multiple posts to a project."""
+        username = session.get('username')
+        if not username:
+            return jsonify({"success": False, "message": "User not logged in"}), 401
+
+        
+       
+        post_type = 'news'
+
+        if not post_id or not post_type:
+            return jsonify({"success": False, "message": "Post IDs and type are required"}), 400
+
+        collection = news_collection if post_type == "news" else social_collection
+        if ObjectId.is_valid(post_id):
+            valid_post_ids = [ObjectId(post_id)] 
+
+        # Validate posts
+        posts = list(collection.find({"_id": {"$in": valid_post_ids}}))
+        if len(posts) != len(valid_post_ids):
+            return jsonify({"success": False, "message": "One or more posts not found"}), 404
+
+        # Update project and posts
+        projects_collection.update_one(
+            {"_id": ObjectId(project_id)},
+            {"$addToSet": {"posts": {"$each": [str(post["_id"]) for post in posts]}}}
+        )
+
+        collection.update_many(
+            {"_id": {"$in": valid_post_ids}},
+            {"$addToSet": {"projects": project_id}}
+        )
+
+        track_action('posts_added_to_project', {
+            'project_id': project_id,
+            'post_count': 1,
+            'post_type': post_type
+        })
+
+        return jsonify({"success": True, "message": "Posts added to project successfully!"})
     data1 = request.json
     
     data = dict(data1)
@@ -1271,6 +1313,7 @@ def addcard_post():
             data['title'] = data.get('title', '').strip()
             data['content'] = data.get('content', '').strip()
             data['image'] = data.get('image', [])
+            project_id = data.get('project', '').strip()
 
             filters_data = filters_collection.find_one({}, {'_id': 0})
             news_url = data.get("news_url")  # Field from form
@@ -1322,7 +1365,10 @@ def addcard_post():
             data['published_date'] = dt
             data['manual_added'] = True
             data.pop('page')
-            news_collection.insert_one(data)
+            result = news_collection.insert_one(data)
+            result_id = str(result.inserted_id)
+            add_posts_to_project(project_id, result_id)
+
         else: 
             person = data.get('name')
             if person == 'person_0':
@@ -2963,6 +3009,10 @@ def analytics_page():
     
         return render_template('analytics.html', username=username, level=level,companyid=companyid, designation=designation, company=company)
 
+
+@app.route('/graphs')
+def graphs():
+    return render_template('Graphs.html')
 @app.errorhandler(404)
 def page_not_found(e):
     return "404 - Page Not Found", 404

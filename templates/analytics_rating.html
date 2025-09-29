@@ -1,0 +1,74 @@
+<div>
+    <select>
+      <option>Selector 1</option>
+      <option>Party Rating</option>
+      <option>Foreign Policy</option>
+      <option>Economy</option>
+      <option>Healthcare</option>
+      <option>more....</option>
+    </select>
+</div>
+
+<!-- Party Rating Section -->
+<div class="container">
+    <div class="section-title">Party Rating</div>
+    <div class="row">
+    <select class="party-country-selector">
+        <option>Select Country</option>
+    </select>
+
+    <!-- Multi-select Party Dropdown -->
+    <div class="dropdown party-dropdown">
+        <button class="dropbtn">Select Parties ▼</button>
+        <div class="dropdown-content party-options">
+        <!-- Filled by JS -->
+        </div>
+    </div>
+
+    <div class="radio-group">
+        <div>Add Rating</div>
+        <label><input type="radio" name="add-rating" value="1"> 1</label>
+        <label><input type="radio" name="add-rating" value="2"> 2</label>
+        <label><input type="radio" name="add-rating" value="3"> 3</label>
+    </div>
+
+    <div class="radio-group">
+        <div>Remove Rating</div>
+        <label><input type="radio" name="remove-rating" value="-1"> -1</label>
+        <label><input type="radio" name="remove-rating" value="-2"> -2</label>
+        <label><input type="radio" name="remove-rating" value="-3"> -3</label>
+    </div>
+
+    <button class="submit-btn">submit</button>
+    </div>
+</div>
+
+<!-- Foreign Policy Section -->
+<div class="container">
+    <div class="section-title">Foreign Policy</div>
+    <div class="row">
+    <select class="foreign-country-selector">
+        <option>Foreign Relation of</option>
+    </select>
+
+    <!-- Multi-select Country Dropdown -->
+    <div class="dropdown foreign-dropdown">
+        <button class="dropbtn">Select Countries ▼</button>
+        <div class="dropdown-content foreign-options">
+        <!-- Filled by JS -->
+        </div>
+    </div>
+
+    <div class="radio-group">
+        <div>Rating</div>
+        <label><input type="radio" name="fp-rating" value="1"> 1</label>
+        <label><input type="radio" name="fp-rating" value="2"> 2</label>
+        <label><input type="radio" name="fp-rating" value="3"> 3</label>
+        <label><input type="radio" name="fp-rating" value="-1"> -1</label>
+        <label><input type="radio" name="fp-rating" value="-2"> -2</label>
+        <label><input type="radio" name="fp-rating" value="-3"> -3</label>
+    </div>
+
+    <button class="submit-btn">submit</button>
+    </div>
+</div>

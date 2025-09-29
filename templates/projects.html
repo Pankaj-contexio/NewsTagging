@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-  <title>News</title>
+  <title>Project|Newstagging</title>
     <!-- Bootstrap -->
     <link href="./static/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -856,7 +856,9 @@ textarea{
                 </ul>
               </li>
             </ul>
-
+            <ul class="nav side-menu">
+                <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
+            </ul>
             <button class="create-project-btn btn btn-primary" onclick="showCreateProjectPopup()">+ Create Project</button>
           </div>
     </div>
@@ -911,6 +913,9 @@ textarea{
                       <li><a href="/SocialMedia">Social Feeds</a></li>
                     </ul>
                   </li>
+                </ul>
+                <ul class="nav side-menu">
+                  <li><a href="/analytics"><i class="fa fa-bar-chart"></i> Analytics</a></li>
                 </ul>
                 <ul class="nav side-menu" style="display: none;" id="user-registration">
                     <li><a href="/register"><i class="fa fa-user"></i> Register User</a></li>
@@ -976,7 +981,11 @@ textarea{
                       <a class="dropdown-item"  href="/logout"><i class="fa fa-sign-out pull-right"></i> Log Out</a>
                     </div>
                   </li>
-  
+                  <li>
+                    <div class="navbar-title" style="flex-grow: 1; text-align: center; font-size: 20px; font-weight: bold; width: 1000px;">
+                        News Intelligence Dashboard
+                    </div>
+                  </li>
             
                 </ul>
               </nav>
@@ -1135,22 +1144,63 @@ textarea{
                             <button class="create-project-btn" onclick="showCreateProjectPopup()">Create Project</button>
                             <button onclick="closePopup()">Close</button>
                         </div>
-                        <div class="popup" id="add-image">
-                            <h1>Upload an Image</h1>
-                            <div id="uploadContainer" enctype="multipart/form-data" style="align-items: center">
-                                <label for="imageInput">Select Image:</label>
-                                <input type="file" name="image" id="imageInput">
-                                <br>
-                                <label for="imageDescriptionInput">Image Description:</label>
-                                <input type="text" name="image_description" id="imageDescriptionInput" placeholder="Enter image description">
+                        <div class="popup" id="add-image" style="padding: 15px; width: 320px; font-family: Arial, sans-serif;">
+                            <select id="upload-images" style="width: 100%; padding: 6px; margin-bottom: 10px;">
+                                <option value="file">Image File</option>
+                                <option value="url">Image Url</option>
+                            </select>
+                            
+                            <div id="uploadContainer" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 10px;">
+                                
+                                <!-- File Upload -->
+                                <div id="fileInputWrapper" style="display: flex; flex-direction: column;">
+                                    <label for="imageInput" style="margin-bottom: 4px;">Select Image File:</label>
+                                    <input type="file" name="image" id="imageInput" style="padding: 4px;">
+                                </div>
+                                
+                                <!-- URL Upload -->
+                                <div id="urlInputWrapper" style="display: none; flex-direction: column;">
+                                    <label for="imageUrlInput" style="margin-bottom: 4px;">Enter Image URL:</label>
+                                    <input type="text" name="image" id="imageUrlInput" style="padding: 6px;">
+                                </div>
+                                
+                                <!-- Description -->
+                                <div style="display: flex; flex-direction: column;">
+                                    <label for="imageDescriptionInput" style="margin-bottom: 4px;">Image Description:</label>
+                                    <input type="text" name="image_description" id="imageDescriptionInput" placeholder="Enter image description" style="padding: 6px;">
+                                </div>
+
+                                <!-- Hidden Inputs -->
                                 <input type="hidden" name="card_id" id="card_id_input">
                                 <input type="hidden" name="project_id" id="project_id_input">
                                 <input type="hidden" name="page" id="page_input">
-                                <br>
-                                <button id="uploadButton">Upload</button>
-                                <button class="close-popup-btn" onclick="closePopup()">Close</button>
+
+                                <!-- Buttons -->
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <button id="uploadButton" style="flex: 1; padding: 8px; cursor: pointer;">Upload</button>
+                                    <button class="close-popup-btn" onclick="closePopup()" style="flex: 1; padding: 8px; cursor: pointer;">Close</button>
+                                </div>
                             </div>
                         </div>
+
+                        <script>
+                            function changeuploadtype() {
+                                const uploadType = document.getElementById("upload-images").value;
+                                const fileWrapper = document.getElementById("fileInputWrapper");
+                                const urlWrapper = document.getElementById("urlInputWrapper");
+
+                                if (uploadType === "file") {
+                                    fileWrapper.style.display = "flex";
+                                    urlWrapper.style.display = "none";
+                                } else {
+                                    fileWrapper.style.display = "none";
+                                    urlWrapper.style.display = "flex";
+                                }
+                            }
+
+                            document.getElementById("upload-images").addEventListener("change", changeuploadtype);
+                        </script>
+
                         <div id="add-document" class="popup" style="
                             padding: 20px; 
                             text-align: center; 
@@ -1849,11 +1899,45 @@ textarea{
                         ? item.editedContent[company][user][user].at(-1)
                         : null;
                     }
-                const contentWords = (editedContent ? editedContent.split(' ') : item.content?.split(' ')) ?? [];
-                const isContentLong = item.content?.split(' ').length > 100;
-                const shortContent = contentWords.slice(0, 100).join(' ');
-                const fullContent = editedContent || item.content || "";
+                // const contentWords = (editedContent ? editedContent.split(' ') : item.content?.split(' ')) ?? [];
+                // const isContentLong = item.content?.split(' ').length > 100;
+                // const shortContent = contentWords.slice(0, 100).join(' ');
+                // const fullContent = editedContent || item.content || "";
+                
 
+                function truncateHtml(html, wordLimit) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+
+                    let count = 0;
+                    function walk(node) {
+                        for (let i = 0; i < node.childNodes.length; i++) {
+                        const child = node.childNodes[i];
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            const words = child.textContent.trim().split(/\s+/);
+                            if (count + words.length > wordLimit) {
+                            child.textContent = words.slice(0, wordLimit - count).join(' ') + '...';
+                            // Remove remaining siblings
+                            while (child.nextSibling) child.parentNode.removeChild(child.nextSibling);
+                            return true; // stop
+                            }
+                            count += words.length;
+                        } else if (child.nodeType === Node.ELEMENT_NODE) {
+                            if (walk(child)) return true;
+                        }
+                        }
+                        return false;
+                    }
+
+                    walk(temp);
+                    return temp.innerHTML;
+                }
+
+                const fullContent = editedContent || item.content || '';
+                
+                const shortContent = truncateHtml(fullContent, 100);
+
+                const isContentLong = fullContent.split(/\s+/).length > 100;
 
                 const sanitizedContent = item.content.replace(/["'<>&]/g, ""); // Removes quotes, angle brackets, and ampersands
 
@@ -1913,8 +1997,8 @@ textarea{
                             </div>
                           </div>
                           <div class="view-mail temp_view_more">
-                            <p class="news-content" contenteditable="true">${isContentLong ? shortContent : fullContent}${isContentLong ? '...' : ''}
-                            ${isContentLong ? '<button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button></p>' : ''}
+                            <div class="news-content" contenteditable="true">${isContentLong ? shortContent : fullContent}${isContentLong ? '...' : ''}
+                            ${isContentLong ? '<button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button></div>' : ''}
                           </div>
                           <div class="toolbar" style="display: none;">
                             <button class="btn highlight-btn" contenteditable="false">
@@ -2044,103 +2128,136 @@ textarea{
                                 </div>
                             </div>
                           </div>
-
-
-
-                          <div class="col-md-12">
-                                <hr>
-                                <h4>Update Party Rating</h4>
-                            </div>
-                          <div class="col-md-12 political-rating" style="display: flex; align-items: center; justify-content: space-between;">
-                                <div class="col">
-                                  <label for="rate-party">
-                                       Select Party<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select rate-party" name="add-rating" required>
-                                    <option value="">Select Party</option>
-                                    ${party_analytics
-                                    .filter(party => party.country === countryId)
-                                    .map(party => `<option value="${party.name}">${party.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="party_rating">
-                                       Give Rating<span style="color: red;">*</span>
-                                  </label>
-                                  <input type="number" class="form-control party_rating" name="party_rating" min="0" max="3" value="0" required>
-                                  
-                                </div>
-                                <div class="col">
-                                  <label for="remove-rate-party">
-                                       Select Party<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select remove-rate-party" name="remove-rating" required>
-                                    <option value="">Select Party</option>
-                                    <option value="All" selected>All</option>
-                                    ${party_analytics
-                                    .filter(party => party.country === countryId)
-                                    .map(party => `<option value="${party.name}">${party.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="remove-party_rating">
-                                       Remove Rating<span style="color: red;"></span>
-                                  </label>
-                                  <input type="number" class="form-control remove-party_rating" name="remove-party_rating" min="0" max="3" value="0">
-                                  
-                                </div>
-                                <div class="col d-flex">
-                                  <button type="submit" class="btn btn-success w-100" onclick="updatepartyrating('${id}', '${countryId}')"  style="margin-top: 30px;">Submit</button>
-                                </div>
-                                
                           </div>
 
-                            <div class="col-md-12">
-                                <hr>
-                                <h4>Update Foreign Relation</h4>
-                            </div>
+                          <hr>
+                          <div class="col-md-12 ">
                             
+                            <select id="rating-selector-${id}" onchange="toggleSection('${id}')">
+                                <option>Select Chart</option>
+                                <option>Political Party</option>
+                                <option>Foreign Policy</option>
+                                <option>Economy</option>
+                                
+                            </select>
+                            </div>
 
+                            <!-- Party Rating Section -->
+                            <div class="container-analytics" style="display: none;">
+                                <div class="section-title">Political Party</div>
+                                <div class="row">
+                                <select class="party-country-selector" style="padding: 6px;border-radius: 4px;">
+                                    <option value="">Select Party</option>
+                                    ${party_analytics
+                                        .filter(party => party.country === countryId)
+                                        .map(party => `<option value="${party.name}">${party.name}</option>`)
+                                        .join('')}
+                                </select>
+                                <div class="radio-group">
+                                    <div>Add Rating</div>
+                                    <label><input type="radio" name="add-rating" value="1"> 1</label>
+                                    <label><input type="radio" name="add-rating" value="2"> 2</label>
+                                    <label><input type="radio" name="add-rating" value="3"> 3</label>
+                                </div>
+                                <!-- Multi-select Party Dropdown -->
+                                <div class="dropdown party-dropdown">
+                                    <button class="dropbtn" style="border-radius: 4px;">Remove Rating From ▼</button>
+                                    <div class="dropdown-content party-options">
+                                    <!-- Filled by JS -->
+                                    <label><input type="checkbox" value="All">All</label>
+                                    ${party_analytics
+                                        .filter(party => party.country === countryId)
+                                        .map(party => `<label><input type="checkbox" value="${party.name}"> ${party.name}</label>`)
+                                        .join('')}
+                                    </div>
+                                </div>
 
-                            <div class="col-md-12 foreignrelation-rating" style="display: flex; align-items: center; justify-content: space-between;">
-                                <div class="col">
-                                  <label for="country-relation">
-                                       Foreign Relation Of<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select country-relation" name="country-relation" required>
-                                    <option value="">Select Country</option>
-                                    ${countrys
-                                    .filter(country => country.count > 0)
-                                    .map(country => `<option value="${country.id}">${country.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="rate-country">
-                                       Foreign Relation with Country<span style="color: red;">*</span>
-                                    </label>
-                                  <select class="form-control custom-select rate-country" name="rate-country" required>
-                                    <option value="">Select Country</option>
-                                    ${countrys
-                                    .filter(country => country.count > 0)
-                                    .map(country => `<option value="${country.id}">${country.name}</option>`)
-                                    .join('')}
-                                  </select>
-                                </div>
-                                <div class="col">
-                                  <label for="country_rating">
-                                       Give Rating(-3 to 3)<span style="color: red;">*</span>
-                                  </label>
-                                  <input type="number" class="form-control country_rating" name="country_rating" min="-3" max="3" value="0" required>
-                                  
-                                </div>
-                                <div class="col d-flex">
-                                  <button type="submit" class="btn btn-success w-100"  style="margin-top: 30px;" onclick="updateForeignRelation('${id}')">Submit</button>
+                                <button class="submit-btn" onclick="updatepartyrating('${id}', '${countryId}')">submit</button>
                                 </div>
                             </div>
 
+                            <!-- Foreign Policy Section -->
+                            <div class="container-analytics" style="display: none;">
+                                <div class="section-title">Foreign Policy</div>
+                                <div class="row">
+                                <select class="foreign-country-selector" style="padding: 6px;border-radius: 4px;">
+                                    <option>Foreign Relation of</option>
+                                    ${countrys
+                                        .filter(country => country.count > 0)
+                                        .map(country => `<option value="${country.id}">${country.name}</option>`)
+                                        .join('')}
+                                </select>
+
+                                <!-- Multi-select Country Dropdown -->
+                                <div class="dropdown foreign-dropdown">
+                                    <button class="dropbtn" style="border-radius: 4px;">Foreign Relation with ▼</button>
+                                    <div class="dropdown-content foreign-options">
+                                    <!-- Filled by JS -->
+                                    ${countrys
+                                        .filter(country => country.count > 0)
+                                        .map(country => `<label><input type="checkbox" value="${country.id}"> ${country.name}</label>`)
+                                        .join('')}
+                                    </div>
+                                </div>
+
+                                <div class="radio-group">
+                                    <div>Rating</div>
+                                    <label><input type="radio" name="fp-rating" value="1"> 1</label>
+                                    <label><input type="radio" name="fp-rating" value="2"> 2</label>
+                                    <label><input type="radio" name="fp-rating" value="3"> 3</label>
+                                </div>
+                                <div class="radio-group">
+                                    <div><br></div>
+                                    <label><input type="radio" name="fp-rating" value="-1"> -1</label>
+                                    <label><input type="radio" name="fp-rating" value="-2"> -2</label>
+                                    <label><input type="radio" name="fp-rating" value="-3"> -3</label>
+                                </div>
+                                
+
+                                <button class="submit-btn" onclick="updateForeignRelation('${id}')">submit</button>
+                                </div>
+                            </div>
+                            <!-- Economy Section -->
+                            <div class="container-analytics" style="display: none; padding:10px;">
+                                <div class="section-title" style="margin-bottom:8px; font-weight:bold;">Economy</div>
+                                <div class="row" style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+
+                                    <!-- Country Selector -->
+                                    <select class="economy-country-selector" 
+                                            style="padding:6px 10px; font-size:14px; border:1px solid #ccc; border-radius:4px;margin-left: 10px;margin-bottom: 3px;">
+                                    <option>Trade With</option>
+                                    ${countrys
+                                        .filter(country => country.count > 0)
+                                        .map(country => `<option value="${country.id}">${country.name}</option>`)
+                                        .join('')}
+                                    </select>
+
+                                    <!-- Multi-select sector Dropdown -->
+                                    <div class="dropdown economy-dropdown">
+                                        <button class="dropbtn" style="border-radius:4px;">Trade in Sector▼</button>
+                                        <div class="dropdown-content economy-options">
+                                        <!-- Filled by JS -->
+                                            <label><input type="checkbox" value="Defence">Defence</label>
+                                            <label><input type="checkbox" value="Public Infra">Public Infra</label>
+                                            <label><input type="checkbox" value="IT / telecom">IT / telecom</label>
+                                            <label><input type="checkbox" value="Transportation & Logistics">Transportation & Logistics</label>
+                                            <label><input type="checkbox" value="Goods">Goods</label>
+                                            <label><input type="checkbox" value="Energy/Chemicals">Energy/Chemicals</label>
+                                            <label><input type="checkbox" value="Public Inv">Public Inv</label>
+                                            <label><input type="checkbox" value="Clothing">Clothing</label>
+                                            <label><input type="checkbox" value="Food">Food</label>
+                                            <label><input type="checkbox" value="Education">Education</label>
+                                            <label><input type="checkbox" value="Medical Essentials">Medical Essentials</label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="number" class="trade-value" placeholder="Trade Value (in million dollars)" style="padding: 5px;margin-bottom: 5px;border:1px solid #ccc; border-radius:4px;">
+                                    </div>
+                                    <button class="submit-btn" onclick="updateEconomy('${id}', '${countryId}')">submit</button>
+                                </div>
+                            </div>
+
+                        
                             <div class="col-md-12">
                                 <hr>
                                 <h4>Update Tags</h4>
@@ -2211,41 +2328,66 @@ textarea{
 
                 //view more button
                 // Add event listener for "View More" button
+                // if (isContentLong) {
+                //     const viewMoreButton = card.querySelector('.view-more-btn');
+                //     const contentElement = card.querySelector('.news-content');
+                //     viewMoreButton.addEventListener('click', () => {
+                //         if (viewMoreButton.innerText === 'View More') {
+                            
+                //             contentElement.innerHTML = `${fullContent}
+                //             <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View Less</button>`;
+
+                            
+                //             const viewLessButton = contentElement.querySelector('.view-more-btn');
+
+                //             viewLessButton.addEventListener('click', () => {
+
+                //                 contentElement.innerHTML = `${shortContent}... <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button>`;
+                //                 addViewMoreEventListener(); // Reattach the event listener
+                //             });
+                //         }
+                //     });
+
+                //     function addViewMoreEventListener() {
+                //         const newViewMoreButton = card.querySelector('.view-more-btn');
+                //         newViewMoreButton.addEventListener('click', () => {
+
+                //             contentElement.innerHTML = `${fullContent}
+                //              <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View Less</button>`;
+                            
+                //             const newViewLessButton = contentElement.querySelector('.view-more-btn');
+                //             newViewLessButton.addEventListener('click', () => {
+
+                //                 contentElement.innerHTML = `${shortContent}... <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button>`;
+                //                 addViewMoreEventListener(); // Reattach the event listener
+                //             });
+                //         });
+                //     }
+                // }
+
                 if (isContentLong) {
                     const viewMoreButton = card.querySelector('.view-more-btn');
                     const contentElement = card.querySelector('.news-content');
+
+                    // Set initial state
+                    let expanded = false;
+
                     viewMoreButton.addEventListener('click', () => {
-                        if (viewMoreButton.innerText === 'View More') {
-
-                            contentElement.innerHTML = `${fullContent}
-                            <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View Less</button>`;
-
+                        if (!expanded) {
+                            // Expand content
                             
-                            const viewLessButton = contentElement.querySelector('.view-more-btn');
-
-                            viewLessButton.addEventListener('click', () => {
-
-                                contentElement.innerHTML = `${shortContent}... <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button>`;
-                                addViewMoreEventListener(); // Reattach the event listener
-                            });
+                            contentElement.innerHTML  = ""
+                            
+                            contentElement.innerHTML = fullContent;
+                            viewMoreButton.innerText = 'View Less';
+                            expanded = true;
+                        } else {
+                            // Collapse content
+                            contentElement.innerHTML = `${shortContent}...`;
+                            viewMoreButton.innerText = 'View More';
+                            expanded = false;
                         }
                     });
-
-                    function addViewMoreEventListener() {
-                        const newViewMoreButton = card.querySelector('.view-more-btn');
-                        newViewMoreButton.addEventListener('click', () => {
-
-                            contentElement.innerHTML = `${fullContent}
-                             <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View Less</button>`;
-                            
-                            const newViewLessButton = contentElement.querySelector('.view-more-btn');
-                            newViewLessButton.addEventListener('click', () => {
-
-                                contentElement.innerHTML = `${shortContent}... <button class="view-more-btn btn btn-link btn-sm" style="font-size:12px;">View More</button>`;
-                                addViewMoreEventListener(); // Reattach the event listener
-                            });
-                        });
-                    }
                 }
                 
                 /////////////////////////////////////////////////////////////////////////
@@ -4235,6 +4377,87 @@ function formatText(className, styleProperty, value, card) {
   
 
 </script>
+<link rel="stylesheet" href="{{ url_for('static', filename='analytics/analytics_rating.css') }}">
+<script>
+    // Toggle dropdowns
+    document.querySelectorAll(".dropbtn").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        closeAllDropdowns();
+        this.parentElement.classList.toggle("show");
+      });
+    });
+    window.onclick = () => closeAllDropdowns();
+    function closeAllDropdowns() {
+      document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+    }
 
+    // Fetch and populate data
+    async function getdata() {
+      const response = await fetch('/api/analytics');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const analytics_data = await response.json();
+
+      let party_analytics = analytics_data.analytics.party;
+      let countrys = analytics_data.countrys;
+      // Fill countries in selectors
+      console.log(document.querySelector('.party-country-selector'));
+      document.querySelectorAll('.party-country-selector, .foreign-country-selector')
+        .forEach(select => {
+          countrys
+            .filter(c => c.count > 0)
+            .forEach(c => {
+              select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+        });
+
+      // On selecting a country, load parties
+      document.querySelectorAll('.party-country-selector').forEach(select => {
+        select.addEventListener('change', e => {
+          const countryId = e.target.value;
+          const partyOptions = select.closest('.row').querySelector('.party-options');
+          partyOptions.innerHTML = party_analytics
+            .filter(p => p.country === countryId)
+            .map(p => `<label><input type="checkbox" value="${p.name}"> ${p.name}</label>`)
+            .join('');
+        });
+      });
+
+      // Load all countries in Foreign Policy dropdown
+      document.querySelectorAll('.foreign-options').forEach(container => {
+        container.innerHTML = countrys
+          .map(c => `<label><input type="checkbox" value="${c.id}"> ${c.name}</label>`)
+          .join('');
+      });
+    }
+
+    getdata();
+</script>
+<script>
+    function toggleSection(id) {
+    let selector = document.querySelector(`#rating-selector-${id}`);
+    const selectedValue = selector.value;
+
+    updateContainer(id, selectedValue);
+
+    function updateContainer(id, selectedValue) {
+        const card = document.getElementById(id);
+
+        // Hide all sections first
+        let containers = card.querySelectorAll('.container-analytics');
+        containers.forEach(container => container.style.display = 'none');
+
+        // Show the selected section
+        let titles = card.querySelectorAll('.section-title');
+        titles.forEach(title => {
+            if (title.textContent.trim() === selectedValue) {
+                let container = title.closest('.container-analytics');
+                if (container) container.style.display = 'block';
+            }
+        });
+    }
+}
+
+</script>
   </body>
 </html>

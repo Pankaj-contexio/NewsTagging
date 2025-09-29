@@ -80,13 +80,13 @@ def upload_report():
     stored_filename = secure_filename(file.filename)
     s3_key = f"{S3_FOLDER}/{session['company']}/{session['username']}/{stored_filename}"
 
-    # Check for duplicate in S3
-    try:
-        s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
-        return jsonify({"error": "File name already exists"}), 400
-    except ClientError as e:
-        if e.response['Error']['Code'] != '404':
-            return jsonify({"error": "Error checking S3"}), 500
+    # # Check for duplicate in S3
+    # try:
+    #     s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+    #     return jsonify({"error": "File name already exists"}), 400
+    # except ClientError as e:
+    #     if e.response['Error']['Code'] != '404':
+    #         return jsonify({"error": "Error checking S3"}), 500
 
     original_filename = secure_filename(file.filename)
     # Upload to S3
@@ -168,7 +168,7 @@ def get_reports():
     report_list = []
     for report in reports:
 
-        print(report)
+        
         date_display = report["report_date"].strftime('%Y-%m-%d')
         if report.get("report_end_date"):
             date_display += f" to {report['report_end_date'].strftime('%Y-%m-%d')}"

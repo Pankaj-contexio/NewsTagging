@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from copy import deepcopy
 from routes.tracking import track_action
-
+from itertools import chain
 projects_bp = Blueprint('projects', __name__)
 
 def get_data_from_db(collection, query, skip=0, limit=20, sort=None):
@@ -138,29 +138,50 @@ def get_project_data(project_id):
             return jsonify({"success": False, "message": "Project not found"}), 404
 
         post_ids = project.get("posts", [])
-        query["_id"] = {"$in": [ObjectId(pid) for pid in post_ids if ObjectId.is_valid(pid)]}
-        query2["_id"] = {"$in": [ObjectId(pid) for pid in post_ids if ObjectId.is_valid(pid)]}
-        # Fetch news and social posts separately
-        news_posts = get_data_from_db(news_collection, query, skip=skip, limit=limit, sort=[("published_date", -1)])
-        social_posts = get_data_from_db(social_collection, query2, skip=skip, limit=limit, sort=[("post_date", -1)])
+        valid_object_ids = [ObjectId(pid) for pid in post_ids if ObjectId.is_valid(pid)]
+        query["_id"] = {"$in": valid_object_ids}
+        query2["_id"] = {"$in": valid_object_ids}
 
-        # count the totla number of posts
-        total_news_posts = news_collection.count_documents(query)
-        total_social_posts = social_collection.count_documents(query2)
-        total_posts = total_news_posts + total_social_posts
-        
-        all_posts = news_posts + social_posts
-        for post in all_posts:
-            post['_id'] = str(post['_id'])
+        # Get all matching post IDs from both collections
+        news_ids = [str(post["_id"]) for post in news_collection.find(query, {"_id": 1})]
+        social_ids = [str(post["_id"]) for post in social_collection.find(query2, {"_id": 1})]
+        all_ids = news_ids + social_ids
+
+        # Sort all_ids by published_date/post_date (fetch dates for sorting)
+        def get_post_date(post_id):
+            post = news_collection.find_one({"_id": ObjectId(post_id)}, {"published_date": 1})
+            if post and "published_date" in post:
+                return post["published_date"]
+            post = social_collection.find_one({"_id": ObjectId(post_id)}, {"post_date": 1})
+            if post and "post_date" in post:
+                return post["post_date"]
+            return datetime.min
+
+        sorted_ids = sorted(all_ids, key=get_post_date, reverse=True)
+        paged_ids = sorted_ids[skip:skip+limit]
+
+        # Fetch posts for paged_ids
+        posts = []
+        for pid in paged_ids:
+            post = news_collection.find_one({"_id": ObjectId(pid)})
+            if post:
+                post['_id'] = str(post['_id'])
+                posts.append(post)
+            else:
+                post = social_collection.find_one({"_id": ObjectId(pid)})
+                if post:
+                    post['_id'] = str(post['_id'])
+                    posts.append(post)
+
+        total_posts = len(all_ids)
 
         return jsonify({
-            "all_posts": all_posts,
+            "all_posts": posts,
             "total_posts": total_posts,
             "project": {
                 "_id": str(project["_id"]),
                 "name": project["name"],
                 "owner": project["owner"],
-                # "posts": post_ids
             }
         })
 
