@@ -1,0 +1,286 @@
+:root {
+  --sidebar-width: 260px;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #f5f6fa;
+}
+
+.container.body {
+  min-height: 100vh;
+}
+
+.top_nav .nav_menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 10px 20px;
+  flex-wrap: wrap;
+}
+
+.top_nav .nav_menu .nav.toggle {
+  margin: 0;
+}
+
+.top_nav .navbar-right {
+  float: none !important;
+  display: flex !important;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+}
+
+.top_nav .navbar-right > li {
+  float: none;
+  position: relative;
+}
+
+.top_nav .navbar-right .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+.navbar-title {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 20px;
+}
+
+.right_col {
+  width: calc(100% - var(--sidebar-width));
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  padding: 30px;
+}
+
+.x_panel,
+.graph-container,
+.card {
+  height: auto !important;
+}
+
+.x_content {
+  overflow-x: auto;
+}
+
+.publish-shares .social,
+.toolbar,
+.filter-tab,
+.dropdown-container,
+.row.d-flex,
+.d-flex {
+  flex-wrap: wrap;
+}
+
+.publish-shares .social > * {
+  margin-bottom: 0.5rem;
+}
+
+.table-responsive,
+.x_content table {
+  width: 100%;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  max-width: 100%;
+}
+
+.mobile-sidebar {
+  padding: 20px 15px 40px;
+}
+
+.mobile-sidebar .nav.side-menu > li > a {
+  color: #ecf0f1;
+}
+
+.mobile-sidebar .btn {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  position: fixed;
+  left: 15px;
+  top: 15px;
+  z-index: 11000;
+  background-color: #2A3F54;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1199px) {
+  .right_col {
+    width: calc(100% - 220px);
+  }
+}
+
+@media (max-width: 991px) {
+  .mobile-sidebar-toggle {
+    display: block;
+  }
+
+  .navbar-title {
+    text-align: left;
+    font-size: 18px;
+    padding-left: 4px;
+  }
+
+  .container.body {
+    padding-left: 0;
+  }
+
+  .left_col,
+  .nav-md .container.body .col-md-3.left_col {
+    display: none;
+  }
+
+  .right_col {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding: 90px 20px 30px;
+  }
+
+  .top_nav {
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+  }
+
+  .top_nav .nav_menu {
+    justify-content: flex-start;
+    padding-left: 60px;
+  }
+
+  .top_nav .navbar-right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .top_nav .navbar-right > li.nav-item.dropdown.open {
+    order: 2;
+  }
+
+  .top_nav .navbar-right > li:last-child {
+    width: 100%;
+    order: 1;
+  }
+
+  .top_nav .navbar-right .navbar-title {
+    width: 100%;
+  }
+
+  .graph-container,
+  .x_panel,
+  .card,
+  .tile_count .tile_stats_count {
+    margin-bottom: 20px;
+  }
+
+  .form-inline .form-control,
+  .form-inline .btn,
+  .input-group,
+  .input-group .form-control {
+    width: 100%;
+    display: block;
+  }
+
+  .input-group .input-group-btn,
+  .input-group .btn {
+    width: 100%;
+  }
+
+  .input-group .input-group-btn .btn {
+    width: 100%;
+  }
+
+  .btn-group {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .top_nav .nav_menu {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .top_nav .navbar-right {
+    justify-content: space-between;
+  }
+
+  .navbar-title {
+    width: 100%;
+    text-align: left;
+  }
+
+  .right_col {
+    padding: 90px 15px 30px;
+  }
+
+  .x_content {
+    padding: 0 10px;
+  }
+
+  .modal,
+  .popup {
+    width: 90% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .top_nav .navbar-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .navbar-title {
+    font-size: 16px;
+  }
+
+  .card,
+  .graph-container,
+  .x_panel {
+    padding: 16px;
+  }
+
+  .mobile-sidebar {
+    width: 85%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-sidebar-toggle {
+    left: 10px;
+    top: 10px;
+  }
+
+  .top_nav .nav_menu {
+    padding-left: 55px;
+  }
+
+  .btn,
+  .form-control,
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+  }
+}
