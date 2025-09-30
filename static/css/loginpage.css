@@ -99,3 +99,39 @@ body {
     text-decoration: none;
   }
   
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column;
+    padding: 40px 20px;
+    height: auto;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 30px 16px;
+  }
+
+  .login-box {
+    padding: 20px 16px;
+  }
+
+  .input {
+    font-size: 14px;
+    height: 40px;
+  }
+
+  .login-btn {
+    height: 42px;
+    font-size: 18px;
+  }
+}

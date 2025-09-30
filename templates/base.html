@@ -30,7 +30,6 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
 <!--    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>-->
 <!-- Add these to your head section -->
-</link></head>
 <!-- jQuery -->
 <script src="../static/vendors/jquery/dist/jquery.min.js"></script>
 <!-- JQVMap -->
@@ -280,8 +279,9 @@
   100% {transform: rotate(1turn)}
 }
   </style>
+</head>
 <body class="nav-md">
-<button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+<button aria-controls="mobileSidebar" aria-expanded="false" aria-label="Toggle navigation" class="mobile-sidebar-toggle" id="mobileSidebarToggle" type="button">
 <i class="fa fa-bars"></i>
 </button>
 <div class="mobile-sidebar-overlay"></div>
@@ -642,36 +642,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
     const overlay = document.querySelector('.mobile-sidebar-overlay');
 
-    function toggleSidebar() {
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
-        document.body.classList.toggle('sidebar-open');
+    if (!sidebar || !toggleBtn || !overlay) {
+        return;
     }
 
-    // Toggle button click
-    if(toggleBtn) {
-        toggleBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleSidebar();
-        });
+    const body = document.body;
+
+    function openSidebar() {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        body.classList.add('sidebar-open');
+        toggleBtn.setAttribute('aria-expanded', 'true');
     }
 
-    // Overlay click
-    if(overlay) {
-        overlay.addEventListener('click', function(e) {
-            toggleSidebar();
-        });
+    function closeSidebar() {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        body.classList.remove('sidebar-open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
     }
 
-    // Close when clicking outside on mobile
-    sidebar.addEventListener('click', function(e) {
-        e.stopPropagation();
+    function toggleSidebar(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        if (sidebar.classList.contains('active')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    }
+
+    toggleBtn.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    sidebar.addEventListener('click', function(event) {
+        event.stopPropagation();
     });
 
-    // Close on resize (optional)
+    sidebar.querySelectorAll('a, button').forEach(function(element) {
+        element.addEventListener('click', closeSidebar);
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+
     window.addEventListener('resize', function() {
-        if(window.innerWidth > 768 && sidebar.classList.contains('active')) {
-            toggleSidebar();
+        if (window.innerWidth > 768) {
+            closeSidebar();
         }
     });
 });
